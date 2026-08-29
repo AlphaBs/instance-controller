@@ -64,6 +64,35 @@ func TestSwaggerDoesNotRequireAuthentication(t *testing.T) {
 	}
 }
 
+func TestCORSPreflightAllowsAllOrigins(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodOptions, "/api/v1/instance/state", nil)
+	request.Header.Set("Origin", "https://example.com")
+	request.Header.Set("Access-Control-Request-Method", http.MethodPost)
+	request.Header.Set("Access-Control-Request-Headers", "authorization,content-type")
+	testRouter(&mockEC2Client{}).ServeHTTP(recorder, request)
+
+	if recorder.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusNoContent)
+	}
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "*" {
+		t.Fatalf("Access-Control-Allow-Origin = %q, want *", got)
+	}
+	if got := recorder.Header().Get("Access-Control-Allow-Headers"); !strings.Contains(got, "Authorization") {
+		t.Fatalf("Access-Control-Allow-Headers = %q, want Authorization", got)
+	}
+}
+
+func TestCORSHeadersAreIncludedInAPIResponse(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "/api/v1/instance", nil)
+	testRouter(&mockEC2Client{}).ServeHTTP(recorder, request)
+
+	if got := recorder.Header().Get("Access-Control-Allow-Origin"); got != "*" {
+		t.Fatalf("Access-Control-Allow-Origin = %q, want *", got)
+	}
+}
+
 func TestAPIRequiresBasicAuthentication(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	client := &mockEC2Client{}

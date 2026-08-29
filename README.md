@@ -10,6 +10,7 @@ AWS Lambda에서 실행되는 단일 EC2 인스턴스 시작/중지 API입니다
 - `GET /healthz`: Lambda Web Adapter readiness check (인증 제외)
 
 EC2 API에는 HTTP Basic Authentication이 적용됩니다. Swagger UI와 readiness check는 인증에서 제외됩니다.
+모든 origin에 대해 CORS가 허용되며 `Authorization` 및 `Content-Type` 요청 헤더를 사용할 수 있습니다.
 
 ## 환경 변수
 

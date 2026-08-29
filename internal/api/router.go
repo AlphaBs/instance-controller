@@ -16,7 +16,7 @@ import (
 func NewRouter(client EC2Client, cfg config.Config) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
-	router.Use(gin.Recovery())
+	router.Use(cors(), gin.Recovery())
 
 	router.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -32,6 +32,21 @@ func NewRouter(client EC2Client, cfg config.Config) *gin.Engine {
 	v1.POST("/instance/state", handler.ChangeInstanceState)
 
 	return router
+}
+
+func cors() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		c.Header("Access-Control-Max-Age", "86400")
+
+		if c.Request.Method == http.MethodOptions {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+		c.Next()
+	}
 }
 
 func basicAuth(expectedUser, expectedPassword string) gin.HandlerFunc {
