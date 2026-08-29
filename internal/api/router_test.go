@@ -56,6 +56,14 @@ func TestHealthCheckDoesNotRequireAuthentication(t *testing.T) {
 	}
 }
 
+func TestSwaggerDoesNotRequireAuthentication(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	testRouter(&mockEC2Client{}).ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/swagger/index.html", nil))
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusOK)
+	}
+}
+
 func TestAPIRequiresBasicAuthentication(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	client := &mockEC2Client{}

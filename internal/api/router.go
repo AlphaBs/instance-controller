@@ -21,10 +21,10 @@ func NewRouter(client EC2Client, cfg config.Config) *gin.Engine {
 	router.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	authorized := router.Group("/")
 	authorized.Use(basicAuth(cfg.BasicAuthUser, cfg.BasicAuthPassword))
-	authorized.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	handler := NewHandler(client, cfg.EC2InstanceID)
 	v1 := authorized.Group("/api/v1")
