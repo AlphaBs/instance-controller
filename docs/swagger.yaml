@@ -1,0 +1,121 @@
+basePath: /api/v1
+definitions:
+  api.ChangeStateRequest:
+    properties:
+      action:
+        enum:
+        - start
+        - stop
+        example: start
+        type: string
+    required:
+    - action
+    type: object
+  api.ChangeStateResponse:
+    properties:
+      action:
+        example: start
+        type: string
+      current_state:
+        example: stopped
+        type: string
+      instance_id:
+        example: i-0123456789abcdef0
+        type: string
+      target_state:
+        example: pending
+        type: string
+    type: object
+  api.ErrorResponse:
+    properties:
+      error:
+        example: internal server error
+        type: string
+    type: object
+  api.InstanceResponse:
+    properties:
+      instance_id:
+        example: i-0123456789abcdef0
+        type: string
+      public_ipv4:
+        example: 203.0.113.10
+        type: string
+      public_ipv6:
+        items:
+          type: string
+        type: array
+      state:
+        example: running
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Controls one EC2 instance configured through environment variables.
+  title: EC2 Instance Controller API
+  version: "1.0"
+paths:
+  /instance:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.InstanceResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - BasicAuth: []
+      summary: Get the configured EC2 instance state and public IP addresses
+      tags:
+      - instance
+  /instance/state:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Requested state transition
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.ChangeStateRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/api.ChangeStateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+        "502":
+          description: Bad Gateway
+          schema:
+            $ref: '#/definitions/api.ErrorResponse'
+      security:
+      - BasicAuth: []
+      summary: Start or stop the configured EC2 instance
+      tags:
+      - instance
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

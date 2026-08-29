@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: EC2 instance controller API on AWS Lambda
+
+Parameters:
+  EC2InstanceId:
+    Type: String
+  BasicAuthUsername:
+    Type: String
+    NoEcho: true
+  BasicAuthPassword:
+    Type: String
+    NoEcho: true
+  EC2Region:
+    Type: String
+    Default: ap-northeast-2
+
+Resources:
+  InstanceControllerFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: .
+      DockerTag: latest
+    Properties:
+      PackageType: Image
+      Architectures:
+        - x86_64
+      MemorySize: 256
+      Timeout: 30
+      Environment:
+        Variables:
+          EC2_INSTANCE_ID: !Ref EC2InstanceId
+          BASIC_AUTH_USERNAME: !Ref BasicAuthUsername
+          BASIC_AUTH_PASSWORD: !Ref BasicAuthPassword
+          EC2_REGION: !Ref EC2Region
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: ec2:DescribeInstances
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - ec2:StartInstances
+                - ec2:StopInstances
+              Resource: !Sub arn:${AWS::Partition}:ec2:${EC2Region}:${AWS::AccountId}:instance/${EC2InstanceId}
+      FunctionUrlConfig:
+        AuthType: NONE
+
+Outputs:
+  FunctionUrl:
+    Description: Lambda Function URL (the application enforces HTTP Basic Authentication)
+    Value: !GetAtt InstanceControllerFunctionUrl.FunctionUrl
